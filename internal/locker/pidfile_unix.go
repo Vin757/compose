@@ -1,3 +1,5 @@
+//go:build !windows
+
 /*
    Copyright 2023 Docker Compose CLI authors
 
@@ -14,22 +16,14 @@
    limitations under the License.
 */
 
-package tracing
+package locker
 
 import (
-	"context"
-	"fmt"
-	"net"
-	"strings"
+	"os"
 
-	"github.com/Microsoft/go-winio"
+	"github.com/docker/docker/pkg/pidfile"
 )
 
-func DialInMemory(ctx context.Context, addr string) (net.Conn, error) {
-	if !strings.HasPrefix(addr, "npipe://") {
-		return nil, fmt.Errorf("not a named pipe address: %s", addr)
-	}
-	addr = strings.TrimPrefix(addr, "npipe://")
-
-	return winio.DialPipeContext(ctx, addr)
+func (f *Pidfile) Lock() error {
+	return pidfile.Write(f.path, os.Getpid())
 }
